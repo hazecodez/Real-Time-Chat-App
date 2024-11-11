@@ -4,13 +4,15 @@ const User = require("../models/userModel");
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ username });
 
-  if (user && bcrypt.compareSync(password, user.password)) {
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
-    res.json({ token });
+  const user = await User.findOne({ username });
+  if (!user) {
+    res.status(400).json({ message: "User not found" });
+  } else if (!bcrypt.compareSync(password, user.password)) {
+    res.status(400).json({ message: "incorrect password" });
   } else {
-    res.status(400).send("Invalid credentials");
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+    res.status(200).json({ token, userData: user });
   }
 };
 
